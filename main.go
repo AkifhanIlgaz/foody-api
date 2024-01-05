@@ -5,6 +5,8 @@ import (
 
 	"github.com/AkifhanIlgaz/foody-api/cfg"
 	"github.com/AkifhanIlgaz/foody-api/database"
+	"github.com/AkifhanIlgaz/foody-api/utils"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -20,4 +22,9 @@ func main() {
 
 	defer databases.Postgres.Close()
 	defer databases.Redis.Close()
+
+	server := gin.Default()
+	utils.SetCors(server)
+
+	log.Fatal(server.Run(":" + config.Port))
 }
