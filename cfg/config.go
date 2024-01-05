@@ -14,6 +14,8 @@ type Config struct {
 	PostgresDBName   string `mapstructure:"PSQL_DBNAME"`
 	PostgresSSLMode  string `mapstructure:"PSQL_SSLMODE"`
 
+	RedisUrl string `mapstructure:"REDIS_URL"`
+
 	Port string `mapstructure:"PORT"`
 
 	SMTPHost     string `mapstructure:"SMTP_HOST"`
