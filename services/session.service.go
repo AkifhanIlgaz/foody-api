@@ -54,6 +54,14 @@ func (service *SessionService) User(token string) (*models.User, error) {
 }
 
 func (service *SessionService) Delete(token string) error {
+	tokenHash := utils.HashToken(token)
+
+	_, err := service.db.Delete(database.TableSessions).
+		Where(squirrel.Eq{database.ColumnTokenHash: tokenHash}).
+		Exec()
+	if err != nil {
+		return fmt.Errorf("delete token: %w", err)
+	}
 
 	return nil
 }
