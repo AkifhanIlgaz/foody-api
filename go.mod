@@ -8,6 +8,7 @@ require (
 	github.com/jackc/pgconn v1.14.1
 	github.com/jackc/pgerrcode v0.0.0-20220416144525-469b46aa5efa
 	github.com/spf13/viper v1.18.2
+	github.com/thanhpk/randstr v1.0.6
 	golang.org/x/crypto v0.16.0
 )
 
