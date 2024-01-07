@@ -49,8 +49,23 @@ func (service *SessionService) Create(uid int) (*models.Session, error) {
 }
 
 func (service *SessionService) User(token string) (*models.User, error) {
+	tokenHash := utils.HashToken(token)
+	var user models.User
 
-	return nil, nil
+	err := service.db.Select(
+		columnWithDot(database.TableUsers, database.ColumnId),
+		columnWithDot(database.TableUsers, database.ColumnEmail),
+		columnWithDot(database.TableUsers, database.ColumnPasswordHash)).
+		From(database.TableSessions).
+		Join("users ON users.id = sessions.user_id").
+		Where(squirrel.Eq{columnWithDot(database.TableSessions, database.ColumnTokenHash): tokenHash}).
+		QueryRow().
+		Scan(&user.Id, &user.Email, &user.PasswordHash)
+	if err != nil {
+		return nil, fmt.Errorf("get user by session: %w", err)
+	}
+
+	return &user, nil
 }
 
 func (service *SessionService) Delete(token string) error {
