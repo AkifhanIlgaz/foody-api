@@ -57,7 +57,7 @@ func (service *SessionService) User(token string) (*models.User, error) {
 		columnWithDot(database.TableUsers, database.ColumnEmail),
 		columnWithDot(database.TableUsers, database.ColumnPasswordHash)).
 		From(database.TableSessions).
-		Join("users ON users.id = sessions.user_id").
+		Join("users ON users.id = sessions.user5_id").
 		Where(squirrel.Eq{columnWithDot(database.TableSessions, database.ColumnTokenHash): tokenHash}).
 		QueryRow().
 		Scan(&user.Id, &user.Email, &user.PasswordHash)

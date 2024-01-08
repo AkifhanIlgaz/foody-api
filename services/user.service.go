@@ -37,7 +37,7 @@ func (service *UserService) Create(email, password string) (*models.User, error)
 	err = service.db.Insert(database.TableUsers).
 		Columns(database.ColumnEmail, database.ColumnPasswordHash).
 		Values(user.Email, user.PasswordHash).
-		Suffix("RETURNING \"id\"").
+		Suffix("RETURNING id").
 		QueryRow().
 		Scan(&user.Id)
 
