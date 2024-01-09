@@ -123,4 +123,26 @@ func (controller *AuthController) SignIn(ctx *gin.Context) {
 }
 
 func (controller *AuthController) SignOut(ctx *gin.Context) {
+	sessionToken := ctx.GetHeader("Session")
+	if sessionToken == "" {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+			"status":  "fail",
+			"message": "Session header is missing",
+		})
+		return
+	}
+
+	err := controller.sessionService.Delete(sessionToken)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"status":  "fail",
+			"message": "Something went wrong",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Signed out successfully",
+	})
 }
