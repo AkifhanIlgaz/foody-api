@@ -23,7 +23,7 @@ func NewAuthController(userService *services.UserService, sessionService *servic
 }
 
 func (controller *AuthController) SignUp(ctx *gin.Context) {
-	var credentials models.SignUpCredentials
+	var credentials models.AuthCredentials
 
 	if err := ctx.ShouldBindJSON(&credentials); err != nil {
 		log.Println(err)
@@ -68,6 +68,58 @@ func (controller *AuthController) SignUp(ctx *gin.Context) {
 }
 
 func (controller *AuthController) SignIn(ctx *gin.Context) {
+	var credentials models.AuthCredentials
+
+	if err := ctx.ShouldBindJSON(&credentials); err != nil {
+		log.Println(err)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
+			"status":  "fail",
+			"message": "Missing required fields",
+		})
+		return
+	}
+
+	user, err := controller.userService.Authenticate(credentials.Email, credentials.Password)
+	if err != nil {
+		log.Println(err)
+
+		if errors.Is(err, services.ErrUserNotFound) {
+			ctx.AbortWithStatusJSON(http.StatusNotFound, gin.H{
+				"status":  "fail",
+				"message": "User with this email doesn't exist",
+			})
+			return
+		}
+
+		if errors.Is(err, services.ErrWrongPassword) {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+				"status":  "fail",
+				"message": "Wrong password",
+			})
+			return
+		}
+
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"status":  "fail",
+			"message": "Something went wrong",
+		})
+		return
+	}
+
+	session, err := controller.sessionService.Create(user.Id)
+	if err != nil {
+		log.Println(err)
+		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"status":  "fail",
+			"message": "Something went wrong",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"message":       "success",
+		"session_token": session.Token,
+	})
 }
 
 func (controller *AuthController) SignOut(ctx *gin.Context) {
