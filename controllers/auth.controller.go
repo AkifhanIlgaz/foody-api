@@ -2,7 +2,7 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/AkifhanIlgaz/foody-api/models"
@@ -26,6 +26,7 @@ func (controller *AuthController) SignUp(ctx *gin.Context) {
 	var credentials models.SignUpCredentials
 
 	if err := ctx.ShouldBindJSON(&credentials); err != nil {
+		log.Println(err)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
 			"status":  "fail",
 			"message": "Missing required fields",
@@ -42,7 +43,7 @@ func (controller *AuthController) SignUp(ctx *gin.Context) {
 			})
 			return
 		}
-		fmt.Println(err)
+		log.Println(err)
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"status":  "fail",
 			"message": "Something went wrong",
@@ -52,7 +53,7 @@ func (controller *AuthController) SignUp(ctx *gin.Context) {
 
 	session, err := controller.sessionService.Create(user.Id)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 			"status":  "fail",
 			"message": "Something went wrong",
@@ -60,7 +61,10 @@ func (controller *AuthController) SignUp(ctx *gin.Context) {
 		return
 	}
 
-	fmt.Println(session)
+	ctx.JSON(http.StatusOK, gin.H{
+		"message":       "success",
+		"session_token": session.Token,
+	})
 }
 
 func (controller *AuthController) SignIn(ctx *gin.Context) {
