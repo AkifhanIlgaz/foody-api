@@ -1,27 +1,24 @@
 version: '3'
 services:
-  db:
-    image: postgres
+  mongodb:
+    image: mongo
+    container_name: mongodb
     restart: always
     env_file:
       - ./app.env
-    environment:
-      POSTGRES_USER: ${PSQL_USER}
-      POSTGRES_PASSWORD: ${PSQL_PASSWORD}
-      POSTGRES_DB: ${PSQL_DBNAME}
+
     ports:
-      - 5432:5432
+      - '6000:27017'
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - mongodb:/data/db
 
   redis:
     image: redis:alpine
-    restart: always
     container_name: redis
     ports:
       - '6379:6379'
     volumes:
       - redisDB:/data
 volumes:
+  mongodb:
   redisDB:
-  pgdata:

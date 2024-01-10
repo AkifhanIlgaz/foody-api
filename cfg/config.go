@@ -7,12 +7,8 @@ import (
 )
 
 type Config struct {
-	PostgresHost     string `mapstructure:"PSQL_HOST"`
-	PostgresPort     string `mapstructure:"PSQL_PORT"`
-	PostgresUser     string `mapstructure:"PSQL_USER"`
-	PostgresPassword string `mapstructure:"PSQL_PASSWORD"`
-	PostgresDBName   string `mapstructure:"PSQL_DBNAME"`
-	PostgresSSLMode  string `mapstructure:"PSQL_SSLMODE"`
+	MongoUri    string `mapstructure:"MONGODB_LOCAL_URI"`
+	MongoDbName string `mapstructure:"MONGO_DATABASE_NAME"`
 
 	RedisUrl string `mapstructure:"REDIS_URL"`
 

@@ -5,21 +5,26 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/AkifhanIlgaz/foody-api/cfg"
 	"github.com/AkifhanIlgaz/foody-api/database"
 	"github.com/AkifhanIlgaz/foody-api/models"
 	"github.com/AkifhanIlgaz/foody-api/utils"
 	"github.com/Masterminds/squirrel"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgerrcode"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
+const usersCollection = "users"
+
 type UserService struct {
-	db squirrel.StatementBuilderType
+	collection *mongo.Collection
 }
 
-func NewUserService(db *sql.DB) *UserService {
+func NewUserService(client *mongo.Client, config *cfg.Config) *UserService {
+
 	return &UserService{
-		db: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).RunWith(db),
+		collection: client.Database(config.MongoDbName).Collection(usersCollection),
 	}
 }
 

@@ -1,6 +1,0 @@
--- Active: 1704460777624@@127.0.0.1@5432@foody@public
-CREATE TABLE IF NOT EXISTS sessions (
-    id SERIAL PRIMARY KEY,
-    user_id INT UNIQUE REFERENCES users (id) ON DELETE CASCADE,
-    token_hash TEXT UNIQUE NOT NULL
-);

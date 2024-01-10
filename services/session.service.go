@@ -1,30 +1,34 @@
 package services
 
 import (
-	"database/sql"
 	"fmt"
 
+	"github.com/AkifhanIlgaz/foody-api/cfg"
 	"github.com/AkifhanIlgaz/foody-api/database"
 	"github.com/AkifhanIlgaz/foody-api/models"
 	"github.com/AkifhanIlgaz/foody-api/utils"
 	"github.com/Masterminds/squirrel"
 	"github.com/thanhpk/randstr"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type SessionService struct {
-	db squirrel.StatementBuilderType
+	collection *mongo.Collection
 }
 
-const BytesPerToken int = 32
+const (
+	bytesPerToken      int    = 32
+	sessionsCollection string = "sessions"
+)
 
-func NewSessionService(db *sql.DB) *SessionService {
+func NewSessionService(client *mongo.Client, config *cfg.Config) *SessionService {
 	return &SessionService{
-		db: squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).RunWith(db),
+		collection: client.Database(config.MongoDbName).Collection(sessionsCollection),
 	}
 }
 
 func (service *SessionService) Create(uid int) (*models.Session, error) {
-	token := randstr.String(BytesPerToken)
+	token := randstr.String(bytesPerToken)
 
 	session := models.Session{
 		Uid:       uid,

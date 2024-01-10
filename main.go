@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 
@@ -19,19 +20,21 @@ func main() {
 		log.Fatal("Could not read environment variables", err)
 	}
 
+	ctx := context.TODO()
+
 	databases, err := database.Connect(config)
 	if err != nil {
 		log.Fatal("Could not connect to databases: ", err)
 	}
 
-	defer databases.Postgres.Close()
+	defer databases.Mongo.Disconnect(ctx)
 	defer databases.Redis.Close()
 
 	server := gin.Default()
 	utils.SetCors(server)
 
-	userService := services.NewUserService(databases.Postgres)
-	sessionService := services.NewSessionService(databases.Postgres)
+	userService := services.NewUserService(databases.Mongo, config)
+	sessionService := services.NewSessionService(databases.Mongo, config)
 
 	authController := controllers.NewAuthController(userService, sessionService)
 

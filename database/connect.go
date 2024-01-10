@@ -2,22 +2,24 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
 	"github.com/AkifhanIlgaz/foody-api/cfg"
 	"github.com/go-redis/redis/v8"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 
 	_ "github.com/lib/pq"
 )
 
 type Databases struct {
-	Postgres *sql.DB
-	Redis    *redis.Client
+	Mongo *mongo.Client
+	Redis *redis.Client
 }
 
 func Connect(config *cfg.Config) (*Databases, error) {
-	postgres, err := connectToPostgres(config)
+	mongo, err := connectToMongo(context.TODO(), config)
 	if err != nil {
 		return nil, fmt.Errorf("connect to databases: %w", err)
 	}
@@ -28,28 +30,25 @@ func Connect(config *cfg.Config) (*Databases, error) {
 	}
 
 	return &Databases{
-		Postgres: postgres,
-		Redis:    redis,
+		Mongo: mongo,
+		Redis: redis,
 	}, nil
 }
 
-func connectToPostgres(config *cfg.Config) (*sql.DB, error) {
-	connectionString := fmt.Sprintf("host=%s port=%v user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		config.PostgresHost, config.PostgresPort, config.PostgresUser, config.PostgresPassword, config.PostgresDBName)
+func connectToMongo(ctx context.Context, config *cfg.Config) (*mongo.Client, error) {
+	mongoConn := options.Client().ApplyURI(config.MongoUri)
 
-	db, err := sql.Open("postgres", connectionString)
+	client, err := mongo.Connect(ctx, mongoConn)
 	if err != nil {
-		return nil, fmt.Errorf("connect to Postgres: %w", err)
+		return nil, fmt.Errorf("connect to mongo: %w", err)
 	}
 
-	err = db.Ping()
-	if err != nil {
-		return nil, fmt.Errorf("unable to ping postgres: %w", err)
+	if err := client.Ping(ctx, readpref.Primary()); err != nil {
+		return nil, fmt.Errorf("connect to mongo: %w", err)
 	}
 
-	fmt.Println("Postgres connected successfully!")
-	return db, nil
+	fmt.Println("MongoDB successfully connected...")
+	return client, nil
 }
 
 func connectToRedis(config *cfg.Config) (*redis.Client, error) {
