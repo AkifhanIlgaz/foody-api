@@ -9,6 +9,7 @@ import (
 	"github.com/AkifhanIlgaz/foody-api/models"
 	"github.com/AkifhanIlgaz/foody-api/utils"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -37,10 +38,12 @@ func (service *UserService) Create(email, password string) (*models.User, error)
 		PasswordHash: passwordHash,
 	}
 
-	_, err = service.collection.InsertOne(service.ctx, user)
+	res, err := service.collection.InsertOne(service.ctx, user)
 	if err != nil {
 		return nil, fmt.Errorf("create user: %w", err)
 	}
+
+	user.Id = res.InsertedID.(primitive.ObjectID)
 
 	return &user, nil
 }
