@@ -1,8 +1,9 @@
 package models
 
+import "go.mongodb.org/mongo-driver/bson/primitive"
+
 type Session struct {
-	Id        int
-	Uid       int
-	Token     string
-	TokenHash string
+	Uid       primitive.ObjectID `bson:"uid"`
+	Token     string             `bson:"-"`
+	TokenHash string             `bson:"tokenHash"`
 }

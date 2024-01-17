@@ -36,7 +36,12 @@ func Connect(config *cfg.Config) (*Databases, error) {
 }
 
 func connectToMongo(ctx context.Context, config *cfg.Config) (*mongo.Client, error) {
-	mongoConn := options.Client().ApplyURI(config.MongoUri)
+	credential := options.Credential{
+		Username: "admin",
+		Password: "password123",
+	}
+
+	mongoConn := options.Client().ApplyURI(config.MongoUri).SetAuth(credential)
 
 	client, err := mongo.Connect(ctx, mongoConn)
 	if err != nil {

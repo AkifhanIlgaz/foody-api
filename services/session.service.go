@@ -1,19 +1,22 @@
 package services
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/AkifhanIlgaz/foody-api/cfg"
-	"github.com/AkifhanIlgaz/foody-api/database"
 	"github.com/AkifhanIlgaz/foody-api/models"
 	"github.com/AkifhanIlgaz/foody-api/utils"
-	"github.com/Masterminds/squirrel"
 	"github.com/thanhpk/randstr"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type SessionService struct {
-	collection *mongo.Collection
+	ctx                context.Context
+	sessionsCollection *mongo.Collection
+	usersCollection    *mongo.Collection
 }
 
 const (
@@ -21,13 +24,15 @@ const (
 	sessionsCollection string = "sessions"
 )
 
-func NewSessionService(client *mongo.Client, config *cfg.Config) *SessionService {
+func NewSessionService(ctx context.Context, client *mongo.Client, config *cfg.Config) *SessionService {
 	return &SessionService{
-		collection: client.Database(config.MongoDbName).Collection(sessionsCollection),
+		ctx:                ctx,
+		sessionsCollection: client.Database(config.MongoDbName).Collection(sessionsCollection),
+		usersCollection:    client.Database(config.MongoDbName).Collection(usersCollection),
 	}
 }
 
-func (service *SessionService) Create(uid int) (*models.Session, error) {
+func (service *SessionService) Create(uid primitive.ObjectID) (*models.Session, error) {
 	token := randstr.String(bytesPerToken)
 
 	session := models.Session{
@@ -36,15 +41,7 @@ func (service *SessionService) Create(uid int) (*models.Session, error) {
 		TokenHash: utils.HashToken(token),
 	}
 
-	err := service.db.Insert(database.TableSessions).
-		Columns(database.ColumnUserId, database.ColumnTokenHash).
-		Values(session.Uid, session.TokenHash).
-		Suffix(`ON CONFLICT (user_id) DO
-		UPDATE
-		SET token_hash = $2
-		RETURNING id`).
-		QueryRow().
-		Scan(&session.Id)
+	_, err := service.sessionsCollection.InsertOne(service.ctx, session)
 	if err != nil {
 		return nil, fmt.Errorf("create token: %w", err)
 	}
@@ -54,17 +51,17 @@ func (service *SessionService) Create(uid int) (*models.Session, error) {
 
 func (service *SessionService) User(token string) (*models.User, error) {
 	tokenHash := utils.HashToken(token)
-	var user models.User
+	sessionFilter := bson.M{"tokenHash": tokenHash}
 
-	err := service.db.Select(
-		columnWithDot(database.TableUsers, database.ColumnId),
-		columnWithDot(database.TableUsers, database.ColumnEmail),
-		columnWithDot(database.TableUsers, database.ColumnPasswordHash)).
-		From(database.TableSessions).
-		Join("users ON users.id = sessions.user5_id").
-		Where(squirrel.Eq{columnWithDot(database.TableSessions, database.ColumnTokenHash): tokenHash}).
-		QueryRow().
-		Scan(&user.Id, &user.Email, &user.PasswordHash)
+	var session models.Session
+	err := service.sessionsCollection.FindOne(service.ctx, sessionFilter).Decode(&session)
+	if err != nil {
+		return nil, fmt.Errorf("get user by session: %w", err)
+	}
+
+	userFilter := bson.M{"_id": session.Uid}
+	var user models.User
+	err = service.usersCollection.FindOne(service.ctx, userFilter).Decode(&user)
 	if err != nil {
 		return nil, fmt.Errorf("get user by session: %w", err)
 	}
@@ -75,11 +72,15 @@ func (service *SessionService) User(token string) (*models.User, error) {
 func (service *SessionService) Delete(token string) error {
 	tokenHash := utils.HashToken(token)
 
-	_, err := service.db.Delete(database.TableSessions).
-		Where(squirrel.Eq{database.ColumnTokenHash: tokenHash}).
-		Exec()
+	filter := bson.M{"tokenHash": tokenHash}
+
+	res, err := service.sessionsCollection.DeleteOne(service.ctx, filter)
 	if err != nil {
 		return fmt.Errorf("delete token: %w", err)
+	}
+
+	if res.DeletedCount == 0 {
+		return fmt.Errorf("token cannot found: %v", token)
 	}
 
 	return nil

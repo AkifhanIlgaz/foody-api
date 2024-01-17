@@ -7,8 +7,10 @@ import (
 )
 
 type Config struct {
-	MongoUri    string `mapstructure:"MONGODB_LOCAL_URI"`
-	MongoDbName string `mapstructure:"MONGO_DATABASE_NAME"`
+	MongoUri      string `mapstructure:"MONGODB_LOCAL_URI"`
+	MongoUsername string
+	MongoPassword string
+	MongoDbName   string `mapstructure:"MONGO_DATABASE_NAME"`
 
 	RedisUrl string `mapstructure:"REDIS_URL"`
 

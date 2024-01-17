@@ -33,8 +33,8 @@ func main() {
 	server := gin.Default()
 	utils.SetCors(server)
 
-	userService := services.NewUserService(databases.Mongo, config)
-	sessionService := services.NewSessionService(databases.Mongo, config)
+	userService := services.NewUserService(ctx, databases.Mongo, config)
+	sessionService := services.NewSessionService(ctx, databases.Mongo, config)
 
 	authController := controllers.NewAuthController(userService, sessionService)
 
