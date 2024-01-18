@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/AkifhanIlgaz/foody-api/cfg"
 	"github.com/AkifhanIlgaz/foody-api/models"
@@ -11,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const usersCollection = "users"
@@ -21,9 +23,20 @@ type UserService struct {
 }
 
 func NewUserService(ctx context.Context, client *mongo.Client, config *cfg.Config) *UserService {
+	collection := client.Database(config.MongoDbName).Collection(usersCollection)
+
+	indexModel := mongo.IndexModel{
+		Keys:    map[string]int{"email": 1},
+		Options: options.Index().SetUnique(true),
+	}
+	_, err := collection.Indexes().CreateOne(context.TODO(), indexModel)
+	if err != nil {
+		log.Fatalln("cannot creat email index for mongodb", err)
+	}
+
 	return &UserService{
 		ctx:        ctx,
-		collection: client.Database(config.MongoDbName).Collection(usersCollection),
+		collection: collection,
 	}
 }
 
