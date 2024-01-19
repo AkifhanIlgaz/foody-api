@@ -61,10 +61,9 @@ func (controller *AuthController) SignUp(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message":       "success",
-		"session_token": session.Token,
-	})
+	setCookie(ctx, cookieSession, session.Token)
+
+	ctx.JSON(http.StatusOK, nil)
 }
 
 func (controller *AuthController) SignIn(ctx *gin.Context) {
@@ -116,10 +115,9 @@ func (controller *AuthController) SignIn(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message":       "success",
-		"session_token": session.Token,
-	})
+	setCookie(ctx, cookieSession, session.Token)
+
+	ctx.JSON(http.StatusOK, nil)
 }
 
 func (controller *AuthController) SignOut(ctx *gin.Context) {
@@ -140,6 +138,8 @@ func (controller *AuthController) SignOut(ctx *gin.Context) {
 		})
 		return
 	}
+
+	deleteCookie(ctx, cookieSession)
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"status":  "success",
