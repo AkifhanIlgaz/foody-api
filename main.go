@@ -37,8 +37,9 @@ func main() {
 	sessionService := services.NewSessionService(ctx, databases.Mongo, config)
 
 	authController := controllers.NewAuthController(userService, sessionService)
+	userMiddleware := controllers.NewUserMiddleware(sessionService)
 
-	authRouteController := routes.NewAuthRouteController(authController)
+	authRouteController := routes.NewAuthRouteController(authController, userMiddleware)
 
 	router := server.Group("/api")
 	router.GET("/health-checker", func(ctx *gin.Context) {

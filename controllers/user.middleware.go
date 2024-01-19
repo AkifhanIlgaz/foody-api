@@ -45,6 +45,7 @@ func (middleware *UserMiddleware) RequireUser() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		_, err := getUserFromCtx(ctx)
 		if err != nil {
+			log.Println(err)
 			ctx.AbortWithError(http.StatusUnauthorized, err)
 			return
 		}
