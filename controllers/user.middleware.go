@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"errors"
 	"log"
 	"net/http"
 
+	"github.com/AkifhanIlgaz/foody-api/models"
 	"github.com/AkifhanIlgaz/foody-api/services"
 	"github.com/gin-gonic/gin"
 )
@@ -39,9 +41,28 @@ func (middleware *UserMiddleware) SetUser() gin.HandlerFunc {
 	}
 }
 
-// TODO: Implement
 func (middleware *UserMiddleware) RequireUser() gin.HandlerFunc {
-	return func(ctx *gin.Context) {}
+	return func(ctx *gin.Context) {
+		_, err := getUserFromCtx(ctx)
+		if err != nil {
+			ctx.AbortWithError(http.StatusUnauthorized, err)
+			return
+		}
+
+		ctx.Next()
+	}
 }
 
-// TODO: Get user from ctx
+func getUserFromCtx(ctx *gin.Context) (*models.User, error) {
+	raw, exists := ctx.Get("currentUser")
+	if !exists {
+		return nil, errors.New("user not logged in")
+	}
+
+	user, ok := raw.(*models.User)
+	if !ok {
+		return nil, errors.New("wrong type for user")
+	}
+
+	return user, nil
+}
